@@ -1,0 +1,12 @@
+dde-application-manager
+dde-clipboard
+dde-control-center
+dde-launchpad
+dde-services
+dde-shell
+dde-tray-loader
+deepin-screen-recorder
+libdde-network-core
+libdtk6gui
+treeland
+xdg-desktop-portal-dde

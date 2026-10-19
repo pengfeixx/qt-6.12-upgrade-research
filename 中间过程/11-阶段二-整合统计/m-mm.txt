@@ -1,0 +1,12 @@
+dde-control-center
+dde-file-manager
+deepin-camera
+deepin-face
+deepin-gomoku
+deepin-lianliankan
+deepin-movie-reborn
+deepin-music
+deepin-screen-recorder
+dtkai
+libdtk6multimedia
+libimageeditor6

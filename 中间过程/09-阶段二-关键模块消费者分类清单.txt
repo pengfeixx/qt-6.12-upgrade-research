@@ -1,0 +1,52 @@
+# 本机关键 Qt6 模块的消费者分类（阶段二，2026-10-08）
+# 数据源：06-阶段二-本机Qt6反向依赖清单.tsv（本机已装包）与 07（仓库级）
+
+== WebEngine 消费者（本机） ==
+deepin-deepinid-client
+uos-ai
+uos-service-support
+
+== Multimedia 消费者（本机） ==
+dde-control-center
+dde-file-manager
+deepin-face
+deepin-screen-recorder
+uos-ai
+
+== Wayland compositor API 消费者（本机） ==
+dde-shell
+
+== QtQuick/QML 消费者（本机） ==
+dde-control-center
+dde-file-manager
+dde-launchpad
+dde-shell
+deepin-license-activator
+deepin-screensaver
+deepin-screensaver-xscreensaver-data
+kwin-common
+kwin-wayland
+kwin-x11
+libdde-shell:amd64
+libdtk6declarative:amd64
+libkf6i18n-dev:amd64
+libkf6syntaxhighlighting-dev:amd64
+libkirigami6:amd64
+libkirigamilayouts6:amd64
+libkirigamiplatform6:amd64
+libkirigamiprimitives6:amd64
+libkwineffects14
+treeland:amd64
+treeland-wallpaper-factory
+uos-ai
+xdg-desktop-portal-dde
+
+== WebEngine 消费者（仓库级，剔除Qt自身/dbgsym/dev/examples） ==
+deepin-deepinid-client
+deepin-mail
+deepin-manual
+deepin-reader
+deepin-unioncode
+deepin-voice-note
+uos-ai
+uos-service-support

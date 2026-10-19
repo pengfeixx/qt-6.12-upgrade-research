@@ -1,0 +1,4 @@
+deepin-deepinid-client
+deepin-editor
+deepin-manual
+deepin-reader
