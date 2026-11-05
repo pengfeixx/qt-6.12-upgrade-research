@@ -27,6 +27,7 @@
 | 12-阶段二-玲珑应用分析/ | 玲珑渠道：工具链版本、已装应用与运行时 layer、Qt 版本盘点（runtime.dtk/webengine 均为 Qt 6.8.0、Chromium 122）、DDE 玲珑交付清单、26 个 linglong.yaml 仓库与示例 manifest | 阶段2 §6 |
 | 13-WebEngine独立发布核实-2026-10-09.md | WebEngine "6.12" 发布状态核实：不存在 6.12 版；独立产品 6.140.0 截至 2026-10-09 仅 RC（code.qt.io tag 实测）；Rust 工具链预警；复现命令 | 总体方案 §1/R3/W-0、阶段1 §4.10 |
 | 14-依赖对比6.8vs6.12-2026-10-09.md | 6.12 vs 6.8 依赖实测对比：真实新增仅 liburing（+PipeWire/VA）；GStreamer 后端与 MNG 插件两个构建缺口；构建依赖新增汇总（CMake 3.25/assimp 6/libmng 2 等） | 总体方案 W-0 |
+| 15-deepin-community组织6.12分支核查-2026-10-21.md | GitHub deepin-community 组织 Qt 仓库 6.12 分支核查：34/38 有 `upstream/qt6.12` 占位分支但**内容全部仍为 6.8.0**（graphs 为空模板）；canvaspainter/tasktree/quickeffectmaker 仓库不存在、remoteobjects 无分支；净室产物可反向灌入承接 | 总体方案 §2.2/W-1.3、阶段1 §6.3 补充 |
 
 ## 一手实测资料（净室打包）
 

@@ -42,6 +42,7 @@
 - 新增源码包：`qt6-tasktree`、`qt6-canvaspainter`（Debian sid 已有先例）、`qt6-openapi`（需自打）、StyleKit 随 declarative 分发。
 - WebEngine/PDF 拆分为独立产品线（6.140+），打包来源与安全更新节奏重新设计。
 - 无现成 Debian/Ubuntu 6.12 打包可抄（Debian sid 停在 6.11.2），**我们的 Qt 6.12 打包已成为该路线的先行实践**。
+- deepin-community 组织已为 34/38 个 Qt 仓库预铺 `upstream/qt6.12` 占位分支（2026-10-21 核实，内容全部仍为 6.8.0，graphs 为空模板；canvaspainter/tasktree/quickeffectmaker 无仓库、remoteobjects 无分支）——社区 6.12 打包尚未实质启动，我们的净室产物可直接反向灌入承接（详见 [中间过程/15](中间过程/15-deepin-community组织6.12分支核查-2026-10-21.md)）。
 
 ### 2.3 影响的应用与场景（阶段2报告）
 

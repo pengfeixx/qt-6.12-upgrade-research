@@ -293,3 +293,93 @@
 8. **补建的两个上游依赖**(assimp 6.0.5、libmng 2.0.3)为 Debian 原版源码包
    在 UOS 净室内的重打包,未做 UOS 化修改(如版本后缀加 ~uos1),引入时注意
    与 UOS 仓库的版本策略对齐。
+
+---
+
+## 6. 2026-10-21 重建实录(净室源修正 + 全流程复刻)
+
+### 6.1 本次重建的动因与净室源修正
+
+首次重建时净室只配了 professional-packages 主池 + security 池,**缺少 dde-snipe/udcp-snipe 两个 PPA**(探测 chinauos.com 域名 404,正确 host 是 `pools.uniontech.com`)。按宿主机当前源全量重建净室:
+
+| 修正点 | 内容 |
+|---|---|
+| 净室源 | 完整镜像宿主机 sources.list:professional-packages(https,设备认证)+ pools.uniontech.com 主池(http)+ ppa/dde-snipe、ppa/udcp-snipe(snipe/2500u2)+ appstore + driver + security |
+| 内网代理 | `pools.uniontech.com` 系解析到内网 10.x,须经宿主机 `/etc/apt/apt.conf.d/95-intranet-proxy` 的 `socks5h://127.0.0.1:11080`;该配置拷入净室(chroot 共享宿主网络栈)后 apt 一切正常 |
+| debootstrap 引导 | 仍用可达的 professional-packages https 主池(设备认证经 /root/.wgetrc;**注意 wgetrc 不剥离引号,凭据必须裸写**) |
+
+### 6.2 复刻中新增的问题与解决(补充 A1-C9 之外)
+
+**D1. qt6-declarative 的安装清单手术(6.11→6.12 变化最集中的模块,共 8 类修复)**
+1. QuickShapesDesignHelpersPrivate / QuickParticlesPrivate 的 metatypes、modules json、cmake 目标在 6.12 去掉 Private 后缀 → 批量 sed 改名;Targets-none.cmake 随私有模块转公开而消失 → 删行;
+2. qmllint 插件 cmake(QmlLintQuickPlugin/QmlLintQdsPlugin 族、Qt6QmlCompilerPlugins.cmake)6.12 移除 → 删行;Qt6qt.conf.in 已不存在 → 删行;
+3. **Qt6WriteQtConfPart.cmake 是 6.12 新 CMake 部件,qt6-tools 构建 examples 硬依赖,必须收进 qt6-declarative-dev**(与 B5 HarmonyOS 工具同级教训);
+4. 新 QML 模块归包:StyleKit 全量 → qml6-module-qt-labs-stylekit;QtQuick/Controls/Native(6.12 新样式)→ qml6-module-qtquick;QtQml/DesignSupport → qml6-module-qtqml;BlurItem → effects 包;
+5. 新增私有运行库必须随插件归包:libQt6QmlDesignSupport.so.6、libQt6QuickControls2Native/FluentWinUI3{,StyleImpl}.so(dpkg-shlibdeps 否则中断);
+6. **静态库 libQt6QmlLint.a / libQt6QmlLS.a / libQt6QmlPreview.a 在 6.12 由 Qt6QmlLintPrivate/Qt6QmlLSPrivate cmake 硬引用,必须收进 qt6-declarative-dev**,否则 qt6-tools configure 失败。
+以上全部固化在 `scripts/fix-qt6-declarative.sh`,由 adapt-module.sh 的通用钩子 `fix-<debsrc>.sh` 自动应用。
+
+**D2. qt6-lottie 的 C5 修正**:6.12 中 LottieVectorImageGenerator 与 Helpers **并存**(并非改名),控制段删除过度;lottietoqml 是 tools 二进制(非示例),其链接的 Generator 私有库需随包发布 → libQt6LottieVectorImage{Generator,Helpers}.so.6 归入 libqt6lottie6。
+
+**D3. 调度时序**:multimedia 在依赖齐备前烧光重试轮,连带 3d/charts/graphs/speech/virtualkeyboard build-dep 失败;**重跑调度器即自愈**(skip-collected 幂等)。教训:build_one 的重试轮间隔太短,应等待依赖或全局重跑。
+
+**D4. 其他环境坑**:① 沙箱层对跨目录硬链接返回假 EXDEV(设备号相同)→ 快照放 work/ 内 + 失败降级普通拷贝;② 崩溃后增量树污染(vtable thunk 未定义引用)→ 必须清 obj 全量重编;③ TaskStop 杀不到 chroot 内子进程 → 恢复时先 pkill ninja/dpkg-buildpackage;④ 高并发(24 任务/16 核)诱发两次宿主机卡死 → JOBS 降为 6、池并发 2 后稳定。
+
+### 6.3 本次重建产物
+
+**40 个源码包全部成功(38 Qt 模块 + assimp 6.0.5 + libmng 2.0.3),577 个 deb,约 2.34 GB**(较首次 467 个多出的主要是新版打包目录对 QML 模块/静态库的更细拆分)。净室内 `qmake6 --version` = 6.12.0、qmllint 6.12.0 可用、`apt-get check` 依赖闭环无错、150+ 包安装无冲突。
+
+两个已知构建缺口与首次一致(GStreamer 后端未编入、MNG 插件 feature 判否),属上游 feature 测试/净室环境问题,已在 §5 遗留清单。明细见《[产物清单.md](产物清单.md)》。
+
+### 6.4 裸命令直接出包(2026-10-21 补充)
+
+适配完成后的模块树**无需任何环境变量**,在净室内直接:
+
+```
+sudo chroot qt6.12-build/chroot
+cd /build/work/<模块目录>          # 如 /build/work/qt6-svg
+dpkg-buildpackage -b -us -uc       # 裸命令直接生成 deb(产物在上级目录 /build/work/)
+```
+
+实现方式:所有模块的 debian/rules 顶部注入两行,把 nodoc 构建语义固化进树内
+(`DEB_BUILD_PROFILES := nodoc` + `export`),doc 包经 Build-Profiles 自动排除,
+绕开 A6/B7 的 qdoc 自举循环——不再依赖外部传 `DEB_BUILD_PROFILES=nodoc`。
+适配脚本(adapt-module.sh)已内置该注入,`scripts/enable-plain-build.sh`
+可对存量树补注。已实测:qt6-svg / qt6-lottie / qt6-imageformats / qt6-multimedia
+裸命令一次通过(未注入前 imageformats/multimedia 会因 doc 包清单引用
+未构建的 qch/html 而 dh_install 中止)。
+
+注意:裸命令须在净室(chroot)内执行——构建依赖(qt6-*-dev 6.12 及全部
+Build-Depends)只装在净室里;宿主机上 dpkg-checkbuilddeps 会报缺依赖。
+
+### 6.5 lottie 源码改动补丁化(2026-10-21)
+
+§6.2-D2 中 lottie 对 debian/ 之外的直接改动(删 lottietoqml 示例目录)已规范化为
+quilt 补丁 `debian/patches/remove-lottietoqml-example.patch`(最小化:仅从
+examples/lottie/CMakeLists.txt 移除一行 `qt_internal_add_example(lottietoqml)`,
+源文件保留不构建;注意 tools/lottietoqml 是随包发布的正式工具,不受影响)。
+至此 **38 个模块源码树全部与官方 tarball 逐字节一致**(构建时补丁由 dpkg-source
+应用、构建后自动回滚),全部改动收敛于 debian/ 内。
+
+配套固化:`scripts/fix-qt6-lottie.sh`(adapt 钩子自动调用)整合了 lottie 全部
+清单适配——control 段手术、Generator/Helpers 两模块并存的头文件/metatypes
+通配认领、运行库归包、私有头与 mkspecs pri 归 private-dev、vectorimage 插件
+归 qml 包、quilt 补丁放置。已端到端验证:全新 adapt → 裸命令
+`dpkg-buildpackage -b -us -uc` 一次通过。
+
+### 6.6 symbols 文件重建回填(2026-10-22)
+
+§3-A7 的"删除 6.11 symbols 由 gensymbols 重生成"策略在 deb 产物侧成立,但打包仓库
+仍需维护 symbols 文件(Debian 惯例;且 deepin 的 private-abi 原子锁依赖正是由 symbols
+头部的 `| <pkg> #MINVER#, qt6-X-private-abi (= <ver>)` 行产生——无 symbols 的 deb
+会丢失该依赖声明)。回填方案(`scripts/regen-symbols{,2}.sh`):
+
+- 以 base(6.8)/Debian 上游(6.11 打包目录) 的 symbols 清单为基准,t64 名映射;
+- 内容从 6.12.0-1 构建 deb 的库重新生成:`dpkg-gensymbols -p<pkg> -v6.12.0 -e<库文件> -I<头部模板> -c0`(Qt 驼峰库名与包名不匹配,必须用 -e 显式列库);
+- 头部元数据沿用基准文件并升版 6.12.0(private-abi 行、Build-Depends-Package 保留,
+  SymbolsHelper-Confirmed 标注 amd64);lottie 的 libqt6bodymovin6→libqt6lottie6
+  上游改名按新 soname 重建;
+- 共 31 个仓库 81 个 symbols 文件,已 amend 强推至各 fork。
+
+注意:build-results 中已构建的 deb 仍是 shlibs 级(A7 策略),从 fork 仓库重走构建即可
+得到含 symbols(及 private-abi 依赖)的正式产物。
